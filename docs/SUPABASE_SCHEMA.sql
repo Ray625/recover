@@ -135,7 +135,7 @@ values (
   'event-photos',
   'event-photos',
   false,
-  2097152,
+  4194304,
   array['image/webp']::text[]
 )
 on conflict (id) do update
@@ -491,8 +491,8 @@ begin
   end if;
 
   -- Storage may not populate metadata.size until after the insert policy runs.
-  -- The bucket file_size_limit remains the authoritative 2 MB per-file limit.
-  if object_size is not null and object_size > 2097152 then
+  -- The bucket file_size_limit remains the authoritative 4 MB per-file limit.
+  if object_size is not null and object_size > 4194304 then
     return false;
   end if;
 
