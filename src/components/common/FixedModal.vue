@@ -73,7 +73,7 @@ const emit = defineEmits<{
 
 .fixed-modal__panel {
   display: flex;
-  width: min(100%, 520px);
+  width: min(100%, 440px);
   max-width: 100%;
   max-height: calc(100dvh - 32px);
   min-width: 0;

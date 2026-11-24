@@ -36,7 +36,7 @@ const emit = defineEmits<{
   position: fixed;
   z-index: 45;
   right: max(14px, calc((100vw - var(--content-width, 1120px)) / 2 + 14px));
-  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  top: calc(14px + env(safe-area-inset-top, 0px));
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;

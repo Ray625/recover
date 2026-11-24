@@ -6,6 +6,32 @@ withDefaults(defineProps<{ closeOnBackdrop?: boolean }>(), { closeOnBackdrop: tr
 const emit = defineEmits<{ close: [] }>()
 const dialogRef = ref<HTMLDialogElement>()
 
+function keepFocus(event: KeyboardEvent) {
+  if (event.key !== 'Tab' || !dialogRef.value) return
+  const controls = [
+    ...dialogRef.value.querySelectorAll<HTMLElement>(
+      'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]',
+    ),
+  ].filter((el) => el.tabIndex >= 0 && el.getClientRects().length > 0)
+  const first = controls[0]
+  const last = controls[controls.length - 1]
+  if (!first) {
+    event.preventDefault()
+    dialogRef.value.focus()
+    return
+  }
+  if (
+    event.shiftKey &&
+    (document.activeElement === first || document.activeElement === dialogRef.value)
+  ) {
+    event.preventDefault()
+    last?.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
 useBodyScrollLock(true)
 onMounted(() => dialogRef.value?.showModal())
 onBeforeUnmount(() => dialogRef.value?.close())
@@ -15,6 +41,7 @@ onBeforeUnmount(() => dialogRef.value?.close())
   <dialog
     ref="dialogRef"
     class="app-dialog"
+    @keydown="keepFocus"
     @cancel.prevent="emit('close')"
     @click.self="closeOnBackdrop && emit('close')"
   >
