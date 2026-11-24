@@ -1,56 +1,42 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { appConfig } from './src/config/app'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
 
-const appBase = '/MeowNote/'
-
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [
-    vue(),
-    vueDevTools(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico'],
-      manifest: {
-        name: 'MeowNote',
-        short_name: 'MeowNote',
-        description: 'Quickly track your cat’s health, behavior, and daily care.',
-        lang: 'zh-TW',
-        start_url: appBase,
-        scope: appBase,
-        display: 'standalone',
-        orientation: 'portrait',
-        theme_color: '#a66a3f',
-        background_color: '#fffdf8',
-        icons: [
-          {
-            src: 'icons/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'icons/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
-          {
-            src: 'icons/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable',
-          },
-        ],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const appBase = env.APP_BASE || '/'
+  return {
+    plugins: [
+      vue(),
+      vueDevTools(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['icon.svg'],
+        manifest: {
+          name: appConfig.name,
+          short_name: appConfig.name,
+          description: appConfig.description,
+          lang: 'zh-TW',
+          start_url: appBase,
+          scope: appBase,
+          display: 'standalone',
+          orientation: 'portrait',
+          theme_color: '#a66a3f',
+          background_color: '#fffdf8',
+          icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
+        },
+      }),
+    ],
+    base: appBase,
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
-    }),
-  ],
-  base: appBase,
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
-  },
+  }
 })

@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { useBodyScrollLock } from '@/composables/useBodyScrollLock'
+import { useId } from 'vue'
+import AppDialog from '@/components/common/AppDialog.vue'
+
+const titleId = useId()
+const messageId = useId()
 
 withDefaults(
   defineProps<{
@@ -20,23 +24,19 @@ const emit = defineEmits<{
   cancel: []
   confirm: []
 }>()
-
-useBodyScrollLock(true)
 </script>
 
 <template>
-  <div class="confirm-backdrop" role="presentation" @click.self="emit('cancel')">
-    <section
-      class="confirm-dialog"
-      :class="`confirm-dialog--${tone}`"
-      aria-labelledby="confirm-dialog-title"
-      aria-describedby="confirm-dialog-message"
-      role="dialog"
-      aria-modal="true"
-    >
+  <AppDialog
+    class="confirm-backdrop"
+    :aria-labelledby="titleId"
+    :aria-describedby="messageId"
+    @close="emit('cancel')"
+  >
+    <section class="confirm-dialog" :class="`confirm-dialog--${tone}`">
       <div class="confirm-dialog__body">
-        <h2 id="confirm-dialog-title" class="confirm-dialog__title">{{ title }}</h2>
-        <p id="confirm-dialog-message" class="confirm-dialog__message">{{ message }}</p>
+        <h2 :id="titleId" class="confirm-dialog__title">{{ title }}</h2>
+        <p :id="messageId" class="confirm-dialog__message">{{ message }}</p>
       </div>
 
       <div class="confirm-dialog__actions">
@@ -61,7 +61,7 @@ useBodyScrollLock(true)
         </button>
       </div>
     </section>
-  </div>
+  </AppDialog>
 </template>
 
 <style scoped>

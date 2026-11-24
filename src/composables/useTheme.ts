@@ -1,7 +1,8 @@
+import { appConfig } from '@/config/app'
 import { readonly, ref, watch } from 'vue'
 import { readJson, writeJson } from '@/utils/storage'
 
-const THEME_STORAGE_KEY = 'meownote:theme'
+const THEME_STORAGE_KEY = `${appConfig.storagePrefix}:theme`
 
 type ThemeMode = 'light' | 'dark'
 

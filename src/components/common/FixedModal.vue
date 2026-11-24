@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { Component, CSSProperties } from 'vue'
+import AppDialog from './AppDialog.vue'
 
 withDefaults(
   defineProps<{
     panelTag?: string | Component
     labelledby?: string
+    label?: string
     closeOnBackdrop?: boolean
     accented?: boolean
     panelStyle?: CSSProperties
@@ -12,6 +14,7 @@ withDefaults(
   {
     panelTag: 'section',
     labelledby: undefined,
+    label: '對話視窗',
     closeOnBackdrop: true,
     accented: false,
     panelStyle: undefined,
@@ -22,23 +25,22 @@ const emit = defineEmits<{
   close: []
   submit: [event: Event]
 }>()
-
-function closeFromBackdrop(): void {
-  emit('close')
-}
 </script>
 
 <template>
-  <div class="fixed-modal" role="presentation" @click.self="closeOnBackdrop && closeFromBackdrop()">
+  <AppDialog
+    class="fixed-modal"
+    :close-on-backdrop="closeOnBackdrop"
+    :aria-labelledby="labelledby"
+    :aria-label="labelledby ? undefined : label"
+    @close="emit('close')"
+  >
     <component
       :is="panelTag"
       class="fixed-modal__panel"
       :class="{ 'fixed-modal__panel--accented': accented }"
       :style="panelStyle"
-      role="dialog"
-      aria-modal="true"
-      :aria-labelledby="labelledby"
-      @submit="emit('submit', $event)"
+      @submit.prevent="emit('submit', $event)"
     >
       <header class="fixed-modal__header">
         <slot name="header"></slot>
@@ -52,7 +54,7 @@ function closeFromBackdrop(): void {
         <slot name="footer"></slot>
       </footer>
     </component>
-  </div>
+  </AppDialog>
 </template>
 
 <style scoped>
@@ -86,7 +88,11 @@ function closeFromBackdrop(): void {
 }
 
 .fixed-modal__panel--accented {
-  border-color: color-mix(in srgb, var(--category-color) 34%, var(--color-border));
+  border-color: color-mix(
+    in srgb,
+    var(--accent-color, var(--color-primary)) 34%,
+    var(--color-border)
+  );
 }
 
 .fixed-modal__header {

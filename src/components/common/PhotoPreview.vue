@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useBodyScrollLock } from '@/composables/useBodyScrollLock'
+import AppDialog from './AppDialog.vue'
 
 export interface PreviewPhoto {
   key: string
@@ -39,8 +39,6 @@ const pinchStartScale = ref(MIN_SCALE)
 const pinchStartMidpointX = ref(0)
 const pinchStartMidpointY = ref(0)
 const lastTapAt = ref(0)
-
-useBodyScrollLock(true)
 
 const canShowPreviousPhoto = computed(() => props.index > 0)
 const canShowNextPhoto = computed(() => props.index < props.photos.length - 1)
@@ -328,12 +326,12 @@ function clamp(value: number, min: number, max: number): number {
 </script>
 
 <template>
-  <div
+  <AppDialog
     class="photo-preview"
-    role="dialog"
-    aria-modal="true"
     aria-label="照片預覽"
-    @click.self="emit('close')"
+    @close="emit('close')"
+    @keydown.left.prevent="showPreviousPhoto"
+    @keydown.right.prevent="showNextPhoto"
     @wheel.prevent
   >
     <header class="photo-preview__header">
@@ -404,7 +402,7 @@ function clamp(value: number, min: number, max: number): number {
         :class="{ 'photo-preview__dot--active': photoIndex === index }"
       ></span>
     </div>
-  </div>
+  </AppDialog>
 </template>
 
 <style scoped>

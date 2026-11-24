@@ -35,8 +35,8 @@ const emit = defineEmits<{
 .app-toast {
   position: fixed;
   z-index: 45;
-  right: max(14px, calc((100vw - var(--content-width)) / 2 + 14px));
-  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+  right: max(14px, calc((100vw - var(--content-width, 1120px)) / 2 + 14px));
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
