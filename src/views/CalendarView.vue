@@ -19,7 +19,9 @@ const days = computed(() => {
   const first = new Date(`${month.value}-01T12:00:00`)
   const start = new Date(first)
   start.setDate(1 - first.getDay())
-  return Array.from({ length: 42 }, (_, i) => {
+  const last = new Date(first.getFullYear(), first.getMonth() + 1, 0)
+  const cellCount = Math.ceil((first.getDay() + last.getDate()) / 7) * 7
+  return Array.from({ length: cellCount }, (_, i) => {
     const d = new Date(start)
     d.setDate(start.getDate() + i)
     return localDate(d)
@@ -33,6 +35,30 @@ const deleting = ref<Workout>()
 const copyOpen = ref(false)
 const copyTarget = ref(localDate())
 const copySource = ref('')
+const monthPickerOpen = ref(false)
+const pickerYear = ref(Number(month.value.slice(0, 4)))
+const pickerMonth = ref(Number(month.value.slice(5)))
+function openMonthPicker() {
+  pickerYear.value = Number(month.value.slice(0, 4))
+  pickerMonth.value = Number(month.value.slice(5))
+  monthPickerOpen.value = true
+}
+function selectMonth() {
+  const year = Number(pickerYear.value)
+  const selectedMonth = Number(pickerMonth.value)
+  if (
+    !Number.isInteger(year) ||
+    year < 1900 ||
+    year > 9999 ||
+    selectedMonth < 1 ||
+    selectedMonth > 12
+  )
+    return
+  const lastDay = new Date(year, selectedMonth, 0).getDate()
+  const day = Math.min(Number(store.selectedDate.slice(8)), lastDay)
+  store.selectedDate = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  monthPickerOpen.value = false
+}
 function goToday() {
   store.selectedDate = localDate()
   month.value = localDate().slice(0, 7)
@@ -72,11 +98,13 @@ function remove() {
         <p class="eyebrow">TRAINING JOURNAL</p>
         <h1>訓練日誌</h1>
       </div>
-      <button class="today" type="button" @click="goToday">今日</button>
+      <button class="today-button" type="button" @click="goToday">今日</button>
     </header>
     <section class="calendar card" aria-label="訓練日曆">
       <div class="row between month-header">
-        <h2>{{ monthTitle }}</h2>
+        <button type="button" class="month-trigger" aria-label="切換年月" @click="openMonthPicker">
+          {{ monthTitle }} <span aria-hidden="true">⌄</span>
+        </button>
         <div class="row">
           <button type="button" class="icon-button" aria-label="上個月" @click="moveMonth(-1)">
             ‹</button
@@ -109,14 +137,14 @@ function remove() {
         </button>
       </div>
     </section>
-    <section class="stack" aria-label="當日紀錄">
+    <section class="stack daily-records" aria-label="當日紀錄">
       <div class="row between">
-        <div>
+        <div class="day-summary">
           <h2>
             {{ Number(store.selectedDate.slice(5, 7)) }} 月
             {{ Number(store.selectedDate.slice(8)) }} 日
-            <span class="muted">{{ store.selectedDate === localDate() ? '・今天' : '' }}</span>
           </h2>
+          <span v-if="store.selectedDate === localDate()" class="muted summary-today">・今日</span>
           <p class="muted progress">{{ completed }} / {{ store.dayWorkouts.length }} 項完成</p>
         </div>
         <ActionMenu
@@ -152,8 +180,8 @@ function remove() {
           <ActionMenu
             :label="`${w.exerciseName}選單`"
             :items="[
-              { label: '複製', action: () => edit(w, true) },
               { label: '編輯', action: () => edit(w) },
+              { label: '複製', action: () => edit(w, true) },
               { label: '刪除', action: () => (deleting = w), danger: true },
             ]"
           />
@@ -174,6 +202,46 @@ function remove() {
         </div>
       </article>
     </section>
+    <FixedModal
+      v-if="monthPickerOpen"
+      panel-tag="form"
+      label="切換年月"
+      @close="monthPickerOpen = false"
+      @submit="selectMonth"
+    >
+      <template #header
+        ><h2>切換年月</h2>
+        <button
+          type="button"
+          class="icon-button"
+          aria-label="關閉"
+          @click="monthPickerOpen = false"
+        >
+          ×
+        </button></template
+      >
+      <template #body
+        ><div class="two-fields">
+          <label class="field"
+            >年份<input
+              v-model="pickerYear"
+              type="number"
+              min="1900"
+              max="9999"
+              required
+              inputmode="numeric"
+          /></label>
+          <label class="field"
+            >月份<select v-model="pickerMonth" aria-label="月份">
+              <option v-for="m in 12" :key="m" :value="m">{{ m }} 月</option>
+            </select></label
+          >
+        </div></template
+      >
+      <template #footer
+        ><button type="submit" class="ui-button ui-button--primary">確定</button></template
+      >
+    </FixedModal>
     <WorkoutEditor v-if="editing" :source="editing" :copy="copying" @close="editing = undefined" />
     <FixedModal
       v-if="copyOpen"
@@ -211,7 +279,13 @@ function remove() {
 </template>
 <style scoped>
 .calendar-page {
-  gap: 24px;
+  gap: 16px;
+}
+.calendar-page h1 {
+  font-size: 1.2rem;
+}
+.daily-records {
+  gap: 8px;
 }
 .eyebrow {
   font-size: 0.6rem;
@@ -220,7 +294,7 @@ function remove() {
   color: var(--color-primary);
   margin-bottom: 7px;
 }
-.today {
+.today-button {
   border: 1px solid var(--color-border);
   border-radius: 10px;
   background: var(--color-surface);
@@ -229,31 +303,48 @@ function remove() {
   font-size: 0.8rem;
 }
 .calendar {
-  padding: 14px 10px;
+  padding: 10px;
 }
 .month-header {
-  padding: 0 4px 12px;
+  padding: 0 4px 6px;
 }
-.month-header h2 {
-  font-size: 1rem;
+.month-trigger {
+  border: 0;
+  padding: 7px 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.month-trigger span {
+  color: var(--color-muted);
+  margin-left: 4px;
+}
+.month-header .icon-button {
+  width: 32px;
+  height: 32px;
 }
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
+  gap: 2px;
 }
 .weekdays {
   color: var(--color-muted);
   font-size: 0.7rem;
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 }
 .day {
   position: relative;
   min-width: 0;
-  aspect-ratio: 1;
+  width: 100%;
+  max-width: 36px;
+  height: 32px;
+  justify-self: center;
   border: 0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: transparent;
   color: var(--color-text);
   font: inherit;
@@ -281,9 +372,21 @@ function remove() {
   border-radius: 50%;
   background: currentColor;
 }
+.day-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.day-summary h2 {
+  font-size: 0.9rem;
+}
+.summary-today {
+  font-size: 0.7rem;
+}
 .progress {
-  margin-top: 5px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 .empty-mark {
   display: block;
@@ -296,15 +399,23 @@ function remove() {
   font-size: 0.75rem;
 }
 .workout {
-  padding: 14px 12px;
+  padding: 10px 12px;
+}
+.workout input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
 }
 .workout-title {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 .workout-title h3 {
   overflow-wrap: anywhere;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 .category-label {
   display: flex;
@@ -312,7 +423,7 @@ function remove() {
   gap: 5px;
   font-size: 0.65rem;
   color: var(--color-muted);
-  margin-bottom: 4px;
+  flex-shrink: 0;
 }
 .category-label i {
   width: 6px;
@@ -320,8 +431,8 @@ function remove() {
   border-radius: 50%;
 }
 .workout-details {
-  padding-left: 31px;
-  margin-top: 12px;
+  padding-left: 0;
+  margin-top: 6px;
   font-size: 0.85rem;
 }
 .detail-separator {

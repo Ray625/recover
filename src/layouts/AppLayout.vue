@@ -5,9 +5,11 @@ import { useTheme } from '@/composables/useTheme'
 import { useFitnessStore } from '@/stores/fitness'
 import WorkoutEditor from '@/components/fitness/WorkoutEditor.vue'
 import AppToast from '@/components/common/AppToast.vue'
+import accountArm from '@/assets/icons/account-arm.png'
 useTheme()
 const store = useFitnessStore()
 const adding = ref(false)
+const calendarDay = new Date().getDate()
 let toastTimer: ReturnType<typeof setTimeout> | undefined
 watch(
   () => store.message,
@@ -28,12 +30,58 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
       <RouterView />
     </main>
     <nav class="bottom-nav" aria-label="主要導覽">
-      <RouterLink to="/"><span aria-hidden="true">▦</span>日曆</RouterLink>
-      <RouterLink to="/account"><span aria-hidden="true">♙</span>帳戶</RouterLink>
+      <RouterLink to="/account">
+        <span
+          class="nav-icon account-icon"
+          :style="{ maskImage: `url(${accountArm})`, WebkitMaskImage: `url(${accountArm})` }"
+          aria-hidden="true"
+        ></span>
+        帳戶
+      </RouterLink>
+      <RouterLink to="/">
+        <svg
+          class="nav-icon"
+          viewBox="0 0 28 28"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          aria-hidden="true"
+        >
+          <rect x="3.5" y="3.5" width="21" height="21" rx="5" />
+          <text
+            x="14"
+            y="14.5"
+            text-anchor="middle"
+            dominant-baseline="central"
+            fill="currentColor"
+            stroke="none"
+            font-size="11"
+            font-weight="600"
+          >
+            {{ calendarDay }}
+          </text>
+        </svg>
+        日曆
+      </RouterLink>
       <button type="button" class="quick-add" aria-label="快速紀錄" @click="adding = true">
         <span aria-hidden="true">＋</span>
       </button>
-      <RouterLink to="/stats"><span aria-hidden="true">▥</span>統計</RouterLink>
+      <RouterLink to="/stats">
+        <svg
+          class="nav-icon"
+          viewBox="0 0 28 28"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M16 4H6a2 2 0 0 0-2 2v18h16v-7M8 9h5M8 13h3M8 19h4" />
+          <path d="m15 16-1 4 4-1L25 8l-3-2-7 10Zm5-8 3 2" />
+        </svg>
+        統計
+      </RouterLink>
       <RouterLink to="/settings"><span aria-hidden="true">⚙</span>設定</RouterLink>
     </nav>
     <WorkoutEditor v-if="adding" @close="adding = false" />
@@ -74,6 +122,19 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
   text-decoration: none;
   color: var(--color-muted);
   font-size: 0.65rem;
+}
+.nav-icon {
+  width: 28px;
+  height: 28px;
+}
+.account-icon {
+  background: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
 }
 .bottom-nav a span {
   font-size: 1.5rem;
