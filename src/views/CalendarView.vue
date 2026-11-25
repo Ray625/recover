@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useFitnessStore } from '@/stores/fitness'
 import { localDate, type Workout } from '@/domain/fitness'
 import ActionMenu from '@/components/common/ActionMenu.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import FixedModal from '@/components/common/FixedModal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import WorkoutEditor from '@/components/fitness/WorkoutEditor.vue'
@@ -93,13 +94,11 @@ function remove() {
 </script>
 <template>
   <div class="stack calendar-page">
-    <header class="row between">
-      <div>
-        <p class="eyebrow">TRAINING JOURNAL</p>
-        <h1>訓練日誌</h1>
-      </div>
-      <button class="today-button" type="button" @click="goToday">今日</button>
-    </header>
+    <PageHeader title="訓練日誌" eyebrow="TRAINING JOURNAL">
+      <template #actions
+        ><button class="today-button" type="button" @click="goToday">今日</button></template
+      >
+    </PageHeader>
     <section class="calendar card" aria-label="訓練日曆">
       <div class="row between month-header">
         <button type="button" class="month-trigger" aria-label="切換年月" @click="openMonthPicker">
@@ -281,18 +280,8 @@ function remove() {
 .calendar-page {
   gap: 16px;
 }
-.calendar-page h1 {
-  font-size: 1.2rem;
-}
 .daily-records {
   gap: 8px;
-}
-.eyebrow {
-  font-size: 0.6rem;
-  letter-spacing: 0.18em;
-  font-weight: 700;
-  color: var(--color-primary);
-  margin-bottom: 7px;
 }
 .today-button {
   border: 1px solid var(--color-border);

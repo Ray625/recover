@@ -31,8 +31,30 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
     </main>
     <nav class="bottom-nav" aria-label="主要導覽">
       <RouterLink to="/account">
+        <svg class="nav-icon account-icon--outline" viewBox="0 0 28 28" aria-hidden="true">
+          <defs>
+            <filter
+              id="account-arm-outline"
+              x="-10%"
+              y="-10%"
+              width="120%"
+              height="120%"
+              color-interpolation-filters="sRGB"
+            >
+              <feMorphology in="SourceAlpha" operator="dilate" radius="0.6" result="outer" />
+              <feMorphology in="SourceAlpha" operator="erode" radius="0.6" result="inner" />
+              <feComposite in="outer" in2="inner" operator="out" result="edge" />
+              <feFlood flood-color="currentColor" />
+              <feComposite in2="edge" operator="in" />
+            </filter>
+            <clipPath id="account-arm-open-edge"><rect width="20.5" height="28" /></clipPath>
+          </defs>
+          <g clip-path="url(#account-arm-open-edge)">
+            <image :href="accountArm" width="28" height="28" filter="url(#account-arm-outline)" />
+          </g>
+        </svg>
         <span
-          class="nav-icon account-icon"
+          class="nav-icon account-icon account-icon--solid"
           :style="{ maskImage: `url(${accountArm})`, WebkitMaskImage: `url(${accountArm})` }"
           aria-hidden="true"
         ></span>
@@ -82,7 +104,9 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
         </svg>
         統計
       </RouterLink>
-      <RouterLink to="/settings"><span aria-hidden="true">⚙</span>設定</RouterLink>
+      <RouterLink to="/settings"
+        ><span class="settings-icon" aria-hidden="true"></span>設定</RouterLink
+      >
     </nav>
     <WorkoutEditor v-if="adding" @close="adding = false" />
     <AppToast :message="store.message" @close="store.message = ''" />
@@ -116,6 +140,7 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
 }
 .bottom-nav a {
   display: grid;
+  grid-template-rows: 28px auto;
   gap: 3px;
   justify-items: center;
   padding: 5px 0;
@@ -126,6 +151,15 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
 .nav-icon {
   width: 28px;
   height: 28px;
+}
+.account-icon--solid {
+  display: none;
+}
+.bottom-nav a.router-link-exact-active .account-icon--outline {
+  display: none;
+}
+.bottom-nav a.router-link-exact-active .account-icon--solid {
+  display: block;
 }
 .account-icon {
   background: currentColor;
@@ -139,6 +173,20 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
 .bottom-nav a span {
   font-size: 1.5rem;
   line-height: 1;
+}
+.bottom-nav a .settings-icon {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  font-size: 2.5rem;
+  line-height: 1;
+}
+.settings-icon::before {
+  content: '⚙︎';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, calc(-50% - 4px));
 }
 .bottom-nav a.router-link-exact-active {
   color: var(--color-primary);
