@@ -5,6 +5,7 @@ process.env.PLAYWRIGHT_BROWSERS_PATH = '0'
 
 export default defineConfig({
   testDir: './tests/e2e',
+  testIgnore: '**/cloud.spec.ts',
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
@@ -24,6 +25,6 @@ export default defineConfig({
     command: 'pnpm exec vite --host 127.0.0.1 --port 4175 --strictPort --mode e2e',
     url: 'http://127.0.0.1:4175',
     reuseExistingServer: false,
-    env: { APP_BASE: '/' },
+    env: { APP_BASE: '/', VITE_SUPABASE_URL: '', VITE_SUPABASE_PUBLISHABLE_KEY: '' },
   },
 })

@@ -9,11 +9,11 @@ pnpm install
 pnpm dev
 ```
 
-目前支援日曆、簡略／逐組紀錄、完成勾選、單項複製、整日複製課表、分類與動作管理、明暗主題、JSON 備份匯出／匯入。帳戶、雲端同步與統計留待後續階段。
+目前支援日曆、簡略／逐組紀錄、完成勾選、單項複製、整日複製課表、分類與動作管理、明暗主題、JSON 備份匯出／匯入。已加入 Supabase Email／密碼帳戶與雲端同步；統計留待後續階段。
 
-資料保存在目前瀏覽器的 localStorage，清除網站資料會移除紀錄，請定期於設定頁匯出備份。匯入會先驗證格式，再確認是否取代目前資料。無法讀取原有資料時會阻止一般寫入，匯出可取回原始內容，再匯入有效備份。
+未登入時資料保存在目前瀏覽器；登入後依帳戶保存快取並同步 Supabase。清除網站資料會移除本機與尚未同步內容，請定期於設定頁匯出備份。匯入會先驗證格式，再確認是否取代目前資料。無法讀取原有資料時會阻止一般寫入，匯出可取回原始內容，再匯入有效備份。
 
-詳細規則見 [健身網站規格](docs/FITNESS_SPEC.md)。
+詳細規則見 [健身網站規格](docs/FITNESS_SPEC.md)；雲端初始化、Auth 回跳網址與同步限制見 [Supabase 設定](docs/SUPABASE_SETUP.md)。
 
 ## 驗證
 
@@ -24,6 +24,8 @@ pnpm build
 pnpm test:e2e:install
 pnpm test:e2e
 pnpm test:e2e:report
+pnpm test:db
+pnpm test:cloud
 ```
 
 `lint` 會自動修正檔案。Playwright 自動啟動測試伺服器（127.0.0.1:4175），執行 Chromium 桌面、Pixel 7 與 iPhone 13 WebKit 手機模擬；WebKit 模擬不代表 iPhone Safari 實機驗證。每個測試有獨立的瀏覽器儲存，不接觸日常瀏覽器資料。首次安裝或升級 Playwright 後需執行 `test:e2e:install`，瀏覽器放在忽略的 node_modules 裡。

@@ -45,3 +45,7 @@ __screenshots__/
 /test-results/
 /playwright-report/
 /blob-report/
+
+# Isolated Supabase mock test artifacts
+/test-results-cloud/
+/playwright-cloud-report/

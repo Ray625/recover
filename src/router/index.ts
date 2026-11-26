@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import CalendarView from '@/views/CalendarView.vue'
 import ComingSoonView from '@/views/ComingSoonView.vue'
+import AccountView from '@/views/AccountView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 
 export default createRouter({
@@ -13,7 +14,7 @@ export default createRouter({
       component: AppLayout,
       children: [
         { path: '', name: 'calendar', component: CalendarView },
-        { path: 'account', component: ComingSoonView, props: { title: '帳戶' } },
+        { path: 'account', component: AccountView },
         { path: 'stats', component: ComingSoonView, props: { title: '統計' } },
         { path: 'settings', name: 'settings', component: SettingsView },
       ],

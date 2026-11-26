@@ -9,6 +9,12 @@ import accountArm from '@/assets/icons/account-arm.png'
 useTheme()
 const store = useFitnessStore()
 const adding = ref(false)
+watch(
+  () => store.ownerId,
+  () => {
+    adding.value = false
+  },
+)
 const calendarDay = new Date().getDate()
 let toastTimer: ReturnType<typeof setTimeout> | undefined
 watch(
@@ -85,7 +91,13 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
         </svg>
         日曆
       </RouterLink>
-      <button type="button" class="quick-add" aria-label="快速紀錄" @click="adding = true">
+      <button
+        type="button"
+        class="quick-add"
+        aria-label="快速紀錄"
+        :disabled="!store.canWrite"
+        @click="adding = true"
+      >
         <span aria-hidden="true">＋</span>
       </button>
       <RouterLink to="/stats">

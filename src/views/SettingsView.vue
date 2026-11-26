@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useTheme } from '@/composables/useTheme'
 import { useFitnessStore } from '@/stores/fitness'
 import { validateData, localDate, type FitnessData } from '@/domain/fitness'
@@ -22,6 +22,15 @@ const edit = ref<{
 const deletion = ref<{ kind: 'category' | 'exercise'; id: string; name: string }>()
 const error = ref('')
 const imported = ref<FitnessData>()
+watch(
+  () => store.ownerId,
+  () => {
+    edit.value = undefined
+    deletion.value = undefined
+    imported.value = undefined
+    error.value = ''
+  },
+)
 const visible = computed(() =>
   store.data.categories
     .map((c) => ({
@@ -211,7 +220,7 @@ function importData() {
     </section>
     <section class="card stack">
       <h2>資料備份</h2>
-      <p class="muted">資料儲存在此瀏覽器</p>
+      <p class="muted">{{ store.ownerId ? '帳戶資料已在此裝置備份' : '資料儲存在此瀏覽器' }}</p>
       <div class="two-fields">
         <button type="button" class="ui-button ui-button--secondary" @click="exportData">
           匯出</button

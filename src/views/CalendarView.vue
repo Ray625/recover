@@ -92,6 +92,14 @@ const deleting = ref<Workout>()
 const copyOpen = ref(false)
 const copyTarget = ref(localDate())
 const copySource = ref('')
+watch(
+  () => store.ownerId,
+  () => {
+    editing.value = undefined
+    deleting.value = undefined
+    copyOpen.value = false
+  },
+)
 const monthPickerOpen = ref(false)
 const pickerYear = ref(Number(month.value.slice(0, 4)))
 const pickerMonth = ref(Number(month.value.slice(5)))

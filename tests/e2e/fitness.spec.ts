@@ -231,15 +231,14 @@ test('dialog traps keyboard focus, closes with Escape and returns focus', async 
   await expect(page.getByRole('button', { name: '快速紀錄' })).toBeFocused()
 })
 
-test('unreadable storage is not overwritten by adding a new record', async ({ page }) => {
+test('unreadable storage disables writes and preserves the original backup', async ({ page }) => {
   await page.evaluate(() => localStorage.setItem('fitness-log:v1', 'invalid data'))
   await page.reload()
   await expect(page.getByRole('alert')).toContainText('本機資料無法讀取')
-  const dialog = await add(page)
-  await dialog.getByRole('button', { name: '儲存', exact: true }).click()
-  await expect(dialog.getByRole('alert')).toContainText('請先匯出原始資料')
+  await expect(page.getByRole('button', { name: '快速紀錄' })).toBeDisabled()
   expect(await page.evaluate(() => localStorage.getItem('fitness-log:v1'))).toBe('invalid data')
-  await dialog.getByRole('button', { name: '關閉', exact: true }).click()
+  await page.getByRole('link', { name: '設定', exact: true }).click()
+  await expect(page.getByRole('button', { name: '匯出', exact: true })).toBeEnabled()
 })
 
 test('card clicks toggle Done while menu actions leave completion unchanged', async ({ page }) => {

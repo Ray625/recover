@@ -17,14 +17,18 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
-    "test:e2e:install": "PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium webkit"
+    "test:e2e:install": "PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium webkit",
+    "test:db": "node --test tests/db/*.test.mjs",
+    "test:cloud": "playwright test --config playwright.cloud.config.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.2",
     "pinia": "^3.0.4",
     "vue": "^3.5.32",
     "vue-router": "4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.6.0",
     "@playwright/test": "^1.65.1",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^24.12.2",
