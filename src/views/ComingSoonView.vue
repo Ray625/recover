@@ -4,7 +4,7 @@ defineProps<{ title: string }>()
 </script>
 <template>
   <div class="stack">
-    <PageHeader :title="title" :eyebrow="title === '帳戶' ? 'ACCOUNT' : 'STATISTICS'" />
+    <PageHeader :title="title" />
     <section class="card empty">尚未開放</section>
   </div>
 </template>

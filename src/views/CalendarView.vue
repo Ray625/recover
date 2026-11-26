@@ -152,7 +152,6 @@ function remove() {
   <div class="stack calendar-page">
     <PageHeader
       title="訓練日誌"
-      eyebrow="TRAINING JOURNAL"
       :inert="recordsExpanded"
       :aria-hidden="recordsExpanded || undefined"
     >

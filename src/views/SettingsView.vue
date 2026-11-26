@@ -147,7 +147,7 @@ function importData() {
 </script>
 <template>
   <div class="stack settings-page">
-    <PageHeader title="設定" eyebrow="PREFERENCES">
+    <PageHeader title="設定">
       <template #actions>
         <HeaderButton @click="toggleDarkMode">
           {{ isDarkMode ? '淺色模式' : '深色模式' }}
