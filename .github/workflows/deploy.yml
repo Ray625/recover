@@ -1,6 +1,8 @@
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -23,7 +25,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 9.15.9
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -34,12 +36,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
       - name: Build
         env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           APP_BASE: /${{ github.event.repository.name }}/
-        run: pnpm build
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::Missing Supabase repository secrets"
+            exit 1
+          fi
+          pnpm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5

@@ -13,7 +13,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=專案的公開金鑰
 
 新版使用 `PUBLISHABLE_KEY` 變數；若專案只有 legacy anon key，也可以填入這個變數。不要使用 service_role 或 secret key。舊 MeowNote 的 ANON_KEY 不會被程式讀取。
 
-變更環境變數後重新啟動 `pnpm dev`。正式部署則須重新建置；GitHub Pages 的同名 Repository Variables 已接入 workflow。
+變更環境變數後重新啟動 `pnpm dev`。正式部署則須重新建置；GitHub Pages 的同名 Repository Secrets 已接入 workflow。
 
 ## 資料庫
 
@@ -76,3 +76,21 @@ pnpm test:cloud
 - 本機空間不足時不宣稱保存成功、不關閉尚未儲存的編輯表單，也不把未保存內容當成成功變更上傳。
 - 有帳戶待同步變更時註冊離頁保護提示；行動瀏覽器不保證顯示提示，因此真正的保護仍是每次變更即寫入本機。重新開啟同一帳戶後繼續核對與同步。
 - 瀏覽器儲存仍受裝置容量、清除網站資料與私密瀏覽生命週期影響；尚未同步的內容應保留匯出備份，不能視為已存入雲端。
+
+## GitHub Pages 正式部署
+
+Repository：`Ray625/recover`，正式網址：`https://ray625.github.io/recover/`。
+
+- `.github/workflows/deploy.yml` 在 push 至 `main` 時自動部署，也可在 Actions 手動執行。
+- CI 使用 Node.js 22、pnpm 9.15.9，執行 `pnpm install --frozen-lockfile` 及 `pnpm run build`（包含 TypeScript 檢查）。目前本機 Node.js 20.20.2 也符合 package.json 的版本要求。
+- Repository Secrets 必須有 `VITE_SUPABASE_URL` 與 `VITE_SUPABASE_PUBLISHABLE_KEY`；缺少任一設定會停止建置。公開金鑰會編入前端，不可填 secret／service_role key。
+- `APP_BASE` 依 Repository 名稱設為 `/recover/`；Vite、hash router、PWA manifest 的 start_url／scope 與 service worker 路徑沿用此 base。
+- Pages 僅上傳 `dist`，不會上傳 `.env.local`。
+
+Supabase Dashboard → Authentication → URL Configuration：
+
+- Site URL：`https://ray625.github.io/recover/`
+- Redirect URLs：`https://ray625.github.io/recover/#/account`
+- 若保留本機開發，繼續保留 `http://localhost:5173/#/account`。
+
+Auth 程式依目前 origin 與 pathname 建立回跳網址，因此會保留 `/recover/` 子路徑。正式確認信與重設密碼仍須在部署後用同一瀏覽器實際驗收。
