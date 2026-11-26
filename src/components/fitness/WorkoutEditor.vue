@@ -26,6 +26,7 @@ const historical = computed(
   () => !!source && !store.data.exercises.some((e) => e.id === source.exerciseId),
 )
 const unchanged = computed(() => !!source && source.exerciseId === exerciseId.value)
+const notes = ref(source?.notes ?? '')
 const error = ref('')
 const adding = ref<'category' | 'exercise' | null>(null)
 const newName = ref('')
@@ -91,6 +92,7 @@ function save() {
     weight: detail.value ? (rows[0]?.weight ?? 0) : Number(weight.value),
     count: detail.value ? rows.length : Number(count.value),
     sets: rows,
+    notes: notes.value.trim(),
     completed: source && !props.copy ? source.completed : true,
     createdAt: source && !props.copy ? source.createdAt : now,
     updatedAt: now,
@@ -249,6 +251,7 @@ function save() {
           ＋ 新增一組
         </button>
       </div>
+      <label class="field">備註<textarea v-model="notes" rows="3" maxlength="2000" /></label>
       <p v-if="error" role="alert" class="error">{{ error }}</p>
     </template>
     <template #footer

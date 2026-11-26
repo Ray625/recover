@@ -24,6 +24,7 @@ export interface Workout {
   weight: number
   count: number
   sets: WorkoutSet[]
+  notes?: string
   completed: boolean
   createdAt: string
   updatedAt: string
@@ -84,6 +85,7 @@ export function validateData(value: unknown): FitnessData {
       !['simple', 'detailed'].includes(w.mode) ||
       !['each', 'total'].includes(w.weightMode) ||
       typeof w.completed !== 'boolean' ||
+      (w.notes !== undefined && (typeof w.notes !== 'string' || w.notes.length > 2000)) ||
       !weight(w.weight) ||
       !count(w.count) ||
       !Array.isArray(w.sets) ||

@@ -20,10 +20,12 @@ test('simple record persists, edits and deletes', async ({ page }) => {
   const dialog = await add(page, '2026-10-12')
   await dialog.getByLabel('重量(kg)', { exact: true }).fill('12.5')
   await dialog.getByLabel('組數', { exact: true }).fill('4')
+  await dialog.getByLabel('備註', { exact: true }).fill('肩胛收緊\n最後一組較吃力')
   await dialog.getByRole('button', { name: '儲存', exact: true }).click()
   const card = page.getByTestId('workout-card')
   await expect(card).toContainText('12.5 kg')
   await expect(card).toContainText('4 組')
+  await expect(card.locator('.workout-notes')).toHaveText('肩胛收緊\n最後一組較吃力')
   await expect(card.getByRole('button', { name: /^完成 / })).toHaveAttribute('aria-pressed', 'true')
   await card.getByRole('button', { name: /^完成 / }).click()
   await expect(card.getByRole('button', { name: /^完成 / })).toHaveAttribute(
@@ -38,9 +40,14 @@ test('simple record persists, edits and deletes', async ({ page }) => {
   await page.getByRole('button', { name: '2026-10-12', exact: true }).click()
   await expect(card).toContainText('12.5 kg')
   await openMenu(page, '啞鈴臥推選單', '編輯')
+  await expect(page.getByRole('dialog').getByLabel('備註', { exact: true })).toHaveValue(
+    '肩胛收緊\n最後一組較吃力',
+  )
+  await page.getByRole('dialog').getByLabel('備註', { exact: true }).fill('下次加重')
   await page.getByRole('dialog').getByLabel('重量(kg)', { exact: true }).fill('15')
   await page.getByRole('button', { name: '儲存', exact: true }).click()
   await expect(card).toContainText('15 kg')
+  await expect(card.locator('.workout-notes')).toHaveText('下次加重')
   await openMenu(page, '啞鈴臥推選單', '刪除')
   await page.getByRole('dialog').getByRole('button', { name: '刪除', exact: true }).click()
   await expect(card).toHaveCount(0)
@@ -89,6 +96,7 @@ test('single copy opens editable draft, defaults today completed, cancel is safe
   page,
 }) => {
   const dialog = await add(page, '2026-10-12')
+  await dialog.getByLabel('備註', { exact: true }).fill('注意呼吸')
   await dialog.getByRole('button', { name: '儲存', exact: true }).click()
   await openMenu(page, '啞鈴臥推選單', '複製')
   const copy = page.getByRole('dialog', { name: '新增紀錄' })
@@ -98,6 +106,7 @@ test('single copy opens editable draft, defaults today completed, cancel is safe
   })
   await expect(copy.getByLabel('日期', { exact: true })).toHaveValue(today)
   await expect(copy.getByLabel('已完成')).toHaveCount(0)
+  await expect(copy.getByLabel('備註', { exact: true })).toHaveValue('注意呼吸')
   await copy.getByRole('button', { name: '關閉' }).click()
   await expect(page.getByTestId('workout-card')).toHaveCount(1)
   await openMenu(page, '啞鈴臥推選單', '複製')

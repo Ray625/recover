@@ -10,6 +10,7 @@ body {
 button,
 a,
 input,
+textarea,
 select {
   -webkit-tap-highlight-color: transparent;
 }
@@ -64,6 +65,7 @@ h3 {
   min-width: 0;
 }
 input:not([type='checkbox']):not([type='color']),
+textarea,
 select {
   width: 100%;
   min-width: 0;
@@ -73,6 +75,13 @@ select {
   padding: 0 12px;
   background: var(--color-background);
   color: var(--color-text);
+}
+textarea {
+  height: auto;
+  min-height: 84px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  resize: vertical;
 }
 /* Native date controls must be allowed to shrink inside mobile forms. */
 input[type='date'] {

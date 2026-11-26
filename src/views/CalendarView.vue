@@ -326,6 +326,7 @@ function remove() {
                   >
                 </div></template
               >
+              <p v-if="w.notes" class="workout-notes">{{ w.notes }}</p>
             </div>
           </article>
         </div>
@@ -660,6 +661,12 @@ function remove() {
   padding-left: 0;
   margin-top: 6px;
   font-size: 0.85rem;
+}
+.workout-notes {
+  margin-top: 6px;
+  color: var(--color-muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 .detail-separator {
   color: var(--color-border-strong);
