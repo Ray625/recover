@@ -1,14 +1,63 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useBodyScrollLock } from '@/composables/useBodyScrollLock'
 import { useFitnessStore } from '@/stores/fitness'
 import { localDate, type Workout } from '@/domain/fitness'
 import ActionMenu from '@/components/common/ActionMenu.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
+import HeaderButton from '@/components/common/HeaderButton.vue'
 import FixedModal from '@/components/common/FixedModal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import WorkoutEditor from '@/components/fitness/WorkoutEditor.vue'
 const store = useFitnessStore()
 const month = ref(store.selectedDate.slice(0, 7))
+const recordsExpanded = ref(false)
+const expandButton = ref<HTMLButtonElement>()
+const recordsList = ref<HTMLElement>()
+const recordsPanel = ref<HTMLElement>()
+const recordsAnchor = ref<HTMLElement>()
+const recordsAnimating = ref(false)
+const placeholderHeight = ref(0)
+let panelAnimation: Animation | undefined
+let disposed = false
+useBodyScrollLock(recordsExpanded)
+onBeforeUnmount(() => {
+  disposed = true
+  panelAnimation?.cancel()
+})
+async function toggleRecords() {
+  if (recordsAnimating.value || !recordsPanel.value || !recordsAnchor.value) return
+  recordsAnimating.value = true
+  const opening = !recordsExpanded.value
+  if (opening) {
+    placeholderHeight.value = recordsPanel.value.getBoundingClientRect().height
+    recordsExpanded.value = true
+    await nextTick()
+    if (recordsList.value) recordsList.value.scrollTop = 0
+  }
+  if (disposed || !recordsPanel.value || !recordsAnchor.value) return
+  const padding = parseFloat(getComputedStyle(recordsPanel.value).paddingTop) || 0
+  const distance = recordsAnchor.value.getBoundingClientRect().top - padding
+  const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 320
+  panelAnimation = recordsPanel.value.animate(
+    opening
+      ? [{ translate: `0 ${distance}px` }, { translate: '0 0' }]
+      : [{ translate: '0 0' }, { translate: `0 ${distance}px` }],
+    { duration, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' },
+  )
+  try {
+    await panelAnimation.finished
+  } catch {
+    /* Page navigation cancels the animation. */
+  }
+  if (disposed) return
+  if (!opening) recordsExpanded.value = false
+  await nextTick()
+  panelAnimation?.cancel()
+  panelAnimation = undefined
+  recordsAnimating.value = false
+  expandButton.value?.focus({ preventScroll: true })
+}
 watch(
   () => store.selectedDate,
   (v) => (month.value = v.slice(0, 7)),
@@ -30,6 +79,13 @@ const days = computed(() => {
 })
 const marked = computed(() => new Set(store.data.workouts.map((w) => w.date)))
 const completed = computed(() => store.dayWorkouts.filter((w) => w.completed).length)
+const recordedParts = computed(() => {
+  const parts = new Map<string, string>()
+  for (const workout of store.dayWorkouts) {
+    if (!parts.has(workout.categoryName)) parts.set(workout.categoryName, workout.categoryColor)
+  }
+  return [...parts].map(([name, color]) => ({ name, color }))
+})
 const editing = ref<Workout>()
 const copying = ref(false)
 const deleting = ref<Workout>()
@@ -94,12 +150,20 @@ function remove() {
 </script>
 <template>
   <div class="stack calendar-page">
-    <PageHeader title="訓練日誌" eyebrow="TRAINING JOURNAL">
-      <template #actions
-        ><button class="today-button" type="button" @click="goToday">今日</button></template
-      >
+    <PageHeader
+      title="訓練日誌"
+      eyebrow="TRAINING JOURNAL"
+      :inert="recordsExpanded"
+      :aria-hidden="recordsExpanded || undefined"
+    >
+      <template #actions><HeaderButton @click="goToday">今日</HeaderButton></template>
     </PageHeader>
-    <section class="calendar card" aria-label="訓練日曆">
+    <section
+      class="calendar card"
+      aria-label="訓練日曆"
+      :inert="recordsExpanded"
+      :aria-hidden="recordsExpanded || undefined"
+    >
       <div class="row between month-header">
         <button type="button" class="month-trigger" aria-label="切換年月" @click="openMonthPicker">
           {{ monthTitle }} <span aria-hidden="true">⌄</span>
@@ -136,71 +200,130 @@ function remove() {
         </button>
       </div>
     </section>
-    <section class="stack daily-records" aria-label="當日紀錄">
-      <div class="row between">
-        <div class="day-summary">
-          <h2>
-            {{ Number(store.selectedDate.slice(5, 7)) }} 月
-            {{ Number(store.selectedDate.slice(8)) }} 日
-          </h2>
-          <span v-if="store.selectedDate === localDate()" class="muted summary-today">・今日</span>
-          <p class="muted progress">{{ completed }} / {{ store.dayWorkouts.length }} 項完成</p>
-        </div>
-        <ActionMenu
-          label="當日選單"
-          :items="[{ label: '複製課表', action: openCopy, disabled: !store.dayWorkouts.length }]"
-        />
-      </div>
-      <div v-if="!store.dayWorkouts.length" class="card empty">
-        <span class="empty-mark" aria-hidden="true">＋</span>
-        <p>這天還沒有紀錄</p>
-        <p class="muted">點選下方 ＋ 開始記錄</p>
-      </div>
-      <article
-        v-for="w in store.dayWorkouts"
-        :key="w.id"
-        class="card workout"
-        :class="{ 'workout--done': w.completed }"
-        data-testid="workout-card"
+    <div
+      ref="recordsAnchor"
+      :style="recordsExpanded ? { height: `${placeholderHeight}px` } : undefined"
+    >
+      <section
+        ref="recordsPanel"
+        class="stack daily-records"
+        :class="{ 'daily-records--expanded': recordsExpanded }"
+        aria-label="當日紀錄"
+        @keydown.esc="recordsExpanded && toggleRecords()"
       >
-        <div class="row">
-          <input
-            type="checkbox"
-            :checked="w.completed"
-            :aria-label="`完成 ${w.exerciseName}`"
-            @change="store.toggle(w)"
-          />
-          <div class="workout-title">
-            <span class="category-label"
-              ><i :style="{ background: w.categoryColor }"></i>{{ w.categoryName }}</span
-            >
-            <h3>{{ w.exerciseName }}</h3>
+        <div class="records-summary-row">
+          <div class="day-summary">
+            <h2>
+              {{ Number(store.selectedDate.slice(5, 7)) }} 月
+              {{ Number(store.selectedDate.slice(8)) }} 日
+            </h2>
+            <div v-if="recordedParts.length" class="day-parts" role="group" aria-label="紀錄部位">
+              <span
+                v-for="part in recordedParts"
+                :key="part.name"
+                class="day-part"
+                :style="{ '--part-color': part.color }"
+                >{{ part.name }}</span
+              >
+            </div>
           </div>
-          <ActionMenu
-            :label="`${w.exerciseName}選單`"
-            :items="[
-              { label: '編輯', action: () => edit(w) },
-              { label: '複製', action: () => edit(w, true) },
-              { label: '刪除', action: () => (deleting = w), danger: true },
-            ]"
-          />
-        </div>
-        <div class="workout-details">
-          <p v-if="w.mode === 'simple'">
-            {{ w.weightMode === 'each' ? '左右各' : '總重' }} {{ w.weight }} kg
-            <span class="detail-separator">/</span> {{ w.count }} 組
-          </p>
-          <template v-else
-            ><p class="muted">
-              {{ w.weightMode === 'each' ? '左右各重' : '總重' }} · {{ w.count }} 組
-            </p>
-            <div class="set-chips">
-              <span v-for="(set, i) in w.sets" :key="i">{{ set.weight }} kg × {{ set.reps }}</span>
-            </div></template
+          <button
+            ref="expandButton"
+            type="button"
+            class="records-handle"
+            :aria-label="recordsExpanded ? '收回紀錄' : '展開紀錄'"
+            :disabled="recordsAnimating"
+            :aria-expanded="recordsExpanded"
+            aria-controls="daily-records-list"
+            @click="toggleRecords"
           >
+            <svg
+              width="20"
+              height="14"
+              viewBox="0 0 20 14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              :class="{ 'records-handle--down': recordsExpanded }"
+            >
+              <path d="m4 10 6-6 6 6" />
+            </svg>
+          </button>
+          <div class="records-summary-actions">
+            <p class="muted progress">{{ completed }} / {{ store.dayWorkouts.length }} 項完成</p>
+            <ActionMenu
+              label="當日選單"
+              :items="[
+                { label: '複製課表', action: openCopy, disabled: !store.dayWorkouts.length },
+              ]"
+            />
+          </div>
         </div>
-      </article>
-    </section>
+        <div id="daily-records-list" ref="recordsList" class="stack records-list">
+          <div v-if="!store.dayWorkouts.length" class="card empty">
+            <p>這天還沒有紀錄, 來運動吧！</p>
+          </div>
+          <article
+            v-for="w in store.dayWorkouts"
+            :key="w.id"
+            class="card workout"
+            :class="{ 'workout--done': w.completed }"
+            data-testid="workout-card"
+            @click="store.toggle(w)"
+          >
+            <div class="row">
+              <button
+                type="button"
+                class="completion-toggle"
+                :aria-pressed="w.completed"
+                :aria-label="`完成 ${w.exerciseName}`"
+                @click.stop="store.toggle(w)"
+              >
+                <span v-if="w.completed" class="completion-done">Done</span>
+                <span
+                  v-else
+                  class="completion-dot"
+                  :style="{ background: w.categoryColor }"
+                  aria-hidden="true"
+                ></span>
+              </button>
+              <div class="workout-title">
+                <span class="category-label">{{ w.categoryName }}</span>
+                <h3>{{ w.exerciseName }}</h3>
+              </div>
+              <ActionMenu
+                :label="`${w.exerciseName}選單`"
+                @click.stop
+                :items="[
+                  { label: '編輯', action: () => edit(w) },
+                  { label: '複製', action: () => edit(w, true) },
+                  { label: '刪除', action: () => (deleting = w), danger: true },
+                ]"
+              />
+            </div>
+            <div class="workout-details">
+              <p v-if="w.mode === 'simple'">
+                {{ w.weightMode === 'each' ? '左右各' : '總重' }} {{ w.weight }} kg
+                <span class="detail-separator">/</span> {{ w.count }} 組
+              </p>
+              <template v-else
+                ><p class="muted">
+                  {{ w.weightMode === 'each' ? '左右各重' : '總重' }} · {{ w.count }} 組
+                </p>
+                <div class="set-chips">
+                  <span v-for="(set, i) in w.sets" :key="i"
+                    >{{ set.weight }} kg × {{ set.reps }}</span
+                  >
+                </div></template
+              >
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
     <FixedModal
       v-if="monthPickerOpen"
       panel-tag="form"
@@ -283,14 +406,85 @@ function remove() {
 .daily-records {
   gap: 8px;
 }
-.today-button {
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: var(--color-surface);
-  color: var(--color-text);
-  padding: 9px 14px;
-  font-size: 0.8rem;
+.records-summary-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
 }
+.records-summary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  white-space: nowrap;
+  min-width: 0;
+}
+.records-summary-actions :deep(.icon-button) {
+  width: 32px;
+}
+@media (max-width: 360px) {
+  .records-summary-row .day-summary {
+    gap: 2px;
+  }
+  .records-summary-row .day-summary h2 {
+    font-size: 0.85rem;
+  }
+  .records-summary-row .progress {
+    font-size: 0.65rem;
+  }
+}
+.records-handle {
+  justify-self: center;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 28px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--color-muted);
+  background: var(--color-primary-light);
+}
+.records-handle--down {
+  transform: rotate(180deg);
+}
+.records-list {
+  gap: 8px;
+}
+.daily-records--expanded {
+  border-inline: 1px solid var(--color-border);
+  position: fixed;
+  top: 0;
+  bottom: var(--bottom-nav-height);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100%, var(--content-width));
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 20px 12px;
+  background: var(--color-background);
+}
+.daily-records--expanded > .records-summary-row {
+  flex-shrink: 0;
+}
+.daily-records--expanded .records-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  align-content: start;
+  padding: 3px;
+  margin: -3px;
+  scrollbar-width: none;
+}
+
+.daily-records--expanded .records-list::-webkit-scrollbar {
+  display: none;
+}
+
 .calendar {
   padding: 10px;
 }
@@ -363,6 +557,8 @@ function remove() {
 }
 .day-summary {
   display: flex;
+  flex-wrap: wrap;
+  row-gap: 2px;
   align-items: baseline;
   gap: 6px;
   min-width: 0;
@@ -371,8 +567,24 @@ function remove() {
 .day-summary h2 {
   font-size: 0.9rem;
 }
-.summary-today {
-  font-size: 0.7rem;
+.day-parts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+.day-part {
+  border-radius: 5px;
+  padding: 2px 5px;
+  max-width: 100%;
+  background: color-mix(in srgb, var(--part-color) 14%, var(--color-surface));
+  color: var(--color-text);
+  border: 1px solid color-mix(in srgb, var(--part-color) 35%, var(--color-border));
+  font-size: 0.6rem;
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .progress {
   font-size: 0.7rem;
@@ -388,12 +600,33 @@ function remove() {
   font-size: 0.75rem;
 }
 .workout {
+  cursor: pointer;
   padding: 10px 12px;
 }
-.workout input[type='checkbox'] {
-  width: 16px;
-  height: 16px;
-  margin: 0;
+.completion-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+}
+.completion-toggle:hover {
+  background: var(--color-primary-light);
+}
+.completion-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.completion-done {
+  font-size: 0.65rem;
+  font-weight: 700;
 }
 .workout-title {
   flex: 1;
@@ -413,11 +646,6 @@ function remove() {
   font-size: 0.65rem;
   color: var(--color-muted);
   flex-shrink: 0;
-}
-.category-label i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
 }
 .workout-details {
   padding-left: 0;

@@ -17,7 +17,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
-    "test:e2e:install": "PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium"
+    "test:e2e:install": "PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium webkit"
   },
   "dependencies": {
     "pinia": "^3.0.4",

@@ -26,7 +26,7 @@ pnpm test:e2e
 pnpm test:e2e:report
 ```
 
-`lint` 會自動修正檔案。Playwright 自動啟動測試伺服器（127.0.0.1:4175），執行 Chromium 桌面與 Pixel 7 手機模擬；不代表 Safari 或實機驗證。每個測試有獨立的瀏覽器儲存，不接觸日常瀏覽器資料。首次安裝或升級 Playwright 後需執行 `test:e2e:install`，瀏覽器放在忽略的 node_modules 裡。
+`lint` 會自動修正檔案。Playwright 自動啟動測試伺服器（127.0.0.1:4175），執行 Chromium 桌面、Pixel 7 與 iPhone 13 WebKit 手機模擬；WebKit 模擬不代表 iPhone Safari 實機驗證。每個測試有獨立的瀏覽器儲存，不接觸日常瀏覽器資料。首次安裝或升級 Playwright 後需執行 `test:e2e:install`，瀏覽器放在忽略的 node_modules 裡。
 
 測試涵蓋日曆日期、簡略與詳細模式切換、逐組不同重量與次數、持久保存、編輯與刪除、兩種複製流程、完成狀態、分類刪除限制、歷史快照、動作管理、備份驗證、鍵盤焦點及損壞資料保護。健身測試固定日期，避免執行月份影響結果。
 

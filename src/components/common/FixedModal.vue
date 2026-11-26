@@ -107,12 +107,18 @@ const emit = defineEmits<{
 
 .fixed-modal__body {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   gap: 14px;
   padding: 18px;
-  scrollbar-gutter: stable;
+  scrollbar-width: none;
+}
+
+.fixed-modal__body::-webkit-scrollbar {
+  display: none;
 }
 
 .fixed-modal__footer {
@@ -136,10 +142,6 @@ const emit = defineEmits<{
   .fixed-modal__header,
   .fixed-modal__body {
     padding: 16px;
-  }
-
-  .fixed-modal__body {
-    scrollbar-gutter: auto;
   }
 
   .fixed-modal__footer {

@@ -8,6 +8,7 @@ import FixedModal from '@/components/common/FixedModal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import ActionMenu from '@/components/common/ActionMenu.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
+import HeaderButton from '@/components/common/HeaderButton.vue'
 const store = useFitnessStore()
 const { isDarkMode, toggleDarkMode } = useTheme()
 const query = ref('')
@@ -148,9 +149,9 @@ function importData() {
   <div class="stack settings-page">
     <PageHeader title="設定" eyebrow="PREFERENCES">
       <template #actions>
-        <button type="button" class="theme-toggle" @click="toggleDarkMode">
+        <HeaderButton @click="toggleDarkMode">
           {{ isDarkMode ? '淺色模式' : '深色模式' }}
-        </button>
+        </HeaderButton>
       </template>
     </PageHeader>
     <section class="stack" aria-label="分類與動作管理">
@@ -272,20 +273,6 @@ function importData() {
 <style scoped>
 .settings-page {
   gap: 16px;
-}
-.theme-toggle {
-  min-height: 32px;
-  border: 1px solid var(--color-border);
-  border-radius: 9px;
-  padding: 4px 10px;
-  background: var(--color-surface);
-  color: var(--color-text);
-  font: inherit;
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-.theme-toggle:hover {
-  background: var(--color-primary-light);
 }
 .category-card {
   padding: 10px 14px;

@@ -125,6 +125,7 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
   padding: 28px 20px calc(110px + env(safe-area-inset-bottom, 0px));
 }
 .bottom-nav {
+  min-height: var(--bottom-nav-height);
   position: fixed;
   bottom: 0;
   left: 50%;

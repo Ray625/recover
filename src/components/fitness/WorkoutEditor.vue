@@ -16,7 +16,6 @@ const detail = ref(source?.mode === 'detailed')
 const weightMode = ref<'each' | 'total'>(source?.weightMode ?? 'each')
 const weight = ref<number | string>(source?.weight ?? 10)
 const count = ref<number | string>(source?.count ?? 3)
-const completed = ref(props.copy ? true : (source?.completed ?? true))
 const sets = ref<{ weight: number | string; reps: number | string }[]>(
   source?.sets.map((s) => ({ ...s })) ?? [],
 )
@@ -92,7 +91,7 @@ function save() {
     weight: detail.value ? (rows[0]?.weight ?? 0) : Number(weight.value),
     count: detail.value ? rows.length : Number(count.value),
     sets: rows,
-    completed: completed.value,
+    completed: source && !props.copy ? source.completed : true,
     createdAt: source && !props.copy ? source.createdAt : now,
     updatedAt: now,
   }
@@ -158,34 +157,59 @@ function save() {
           </button>
         </div>
       </div>
-      <label class="field"
-        >重量方式<select v-model="weightMode" aria-label="重量方式">
-          <option value="each">左右各重（kg）</option>
-          <option value="total">總重（kg）</option>
-        </select></label
-      >
       <label class="row detail-toggle"
         ><input type="checkbox" :checked="detail" @change="switchDetail" />逐組詳細紀錄</label
       >
+      <div class="weight-heading">
+        <div class="weight-label-group">
+          <label v-if="!detail" for="workout-weight">重量(kg)</label>
+          <span v-else>重量(kg)</span>
+          <div class="weight-mode-toggle" role="group" aria-label="重量方式">
+            <button
+              type="button"
+              :aria-pressed="weightMode === 'total'"
+              @click="weightMode = 'total'"
+            >
+              總重
+            </button>
+            <button
+              type="button"
+              :aria-pressed="weightMode === 'each'"
+              @click="weightMode = 'each'"
+            >
+              各重
+            </button>
+          </div>
+        </div>
+        <label v-if="!detail" for="workout-count">組數</label>
+        <span v-else>次數</span>
+      </div>
       <div v-if="!detail" class="two-fields">
-        <label class="field"
-          >重量（kg）<input
-            v-model="weight"
-            type="number"
-            min="0"
-            max="10000"
-            step="any"
-            required
-            inputmode="decimal" /></label
-        ><label class="field"
-          >組數<input v-model="count" type="number" min="1" max="1000" required inputmode="numeric"
-        /></label>
+        <input
+          id="workout-weight"
+          v-model="weight"
+          type="number"
+          min="0"
+          max="10000"
+          step="any"
+          required
+          inputmode="decimal"
+        />
+        <input
+          id="workout-count"
+          v-model="count"
+          type="number"
+          min="1"
+          max="1000"
+          required
+          inputmode="numeric"
+        />
       </div>
       <div v-else class="stack">
         <div v-for="(set, i) in sets" :key="i" class="set-row">
-          <span class="set-number">{{ i + 1 }}</span>
           <label class="field"
-            >重量（kg）<input
+            ><span class="sr-only">重量(kg)</span
+            ><input
               v-model="set.weight"
               :aria-label="`第 ${i + 1} 組重量`"
               type="number"
@@ -196,7 +220,8 @@ function save() {
               inputmode="decimal"
           /></label>
           <label class="field"
-            >次數<input
+            ><span class="sr-only">次數</span
+            ><input
               v-model="set.reps"
               :aria-label="`第 ${i + 1} 組次數`"
               type="number"
@@ -224,7 +249,6 @@ function save() {
           ＋ 新增一組
         </button>
       </div>
-      <label class="row"><input v-model="completed" type="checkbox" />已完成</label>
       <p v-if="error" role="alert" class="error">{{ error }}</p>
     </template>
     <template #footer
@@ -241,22 +265,52 @@ function save() {
   font-size: 0.8rem;
 }
 .detail-toggle {
-  padding: 10px 0;
+  padding: 4px 0;
   font-size: 0.9rem;
+}
+.weight-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.weight-label-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.weight-mode-toggle {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--color-primary-light);
+  border: 1px solid var(--color-border);
+}
+.weight-mode-toggle button {
+  border: 0;
+  padding: 4px 9px;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.weight-mode-toggle button[aria-pressed='true'] {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
 .set-row {
   display: grid;
-  grid-template-columns: 20px 1fr 1fr 32px;
-  gap: 8px;
+  grid-template-columns: minmax(0, calc(50% - 6px)) minmax(0, 1fr) 32px;
+  gap: 12px;
   align-items: end;
 }
 .set-row .icon-button {
   width: 32px;
   height: 46px;
-}
-.set-number {
-  align-self: center;
-  color: var(--color-muted);
-  font-size: 0.8rem;
 }
 </style>

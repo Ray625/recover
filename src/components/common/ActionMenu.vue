@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
 import { useClickOutside } from '@/composables/useClickOutside'
 defineProps<{
   label: string
@@ -8,14 +8,44 @@ defineProps<{
 const root = ref<HTMLElement>()
 const open = ref(false)
 const trigger = ref<HTMLButtonElement>()
-useClickOutside(root, () => (open.value = false))
+const panel = ref<HTMLElement>()
+const panelStyle = ref<CSSProperties>({})
+useClickOutside(root, (event) => {
+  if (event.target instanceof Node && panel.value?.contains(event.target)) return
+  open.value = false
+})
+function positionPanel() {
+  if (!open.value || !trigger.value || !panel.value) return
+  const rect = trigger.value.getBoundingClientRect()
+  const height = panel.value.offsetHeight
+  const width = panel.value.offsetWidth
+  const top = rect.top - height - 6 >= 8 ? rect.top - height - 6 : rect.bottom + 6
+  panelStyle.value = {
+    left: `${Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8))}px`,
+    top: `${Math.max(8, Math.min(top, window.innerHeight - height - 8))}px`,
+  }
+}
+watch(open, async (value) => {
+  if (value) {
+    await nextTick()
+    positionPanel()
+  }
+})
+onMounted(() => {
+  window.addEventListener('resize', positionPanel)
+  window.addEventListener('scroll', positionPanel, true)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', positionPanel)
+  window.removeEventListener('scroll', positionPanel, true)
+})
 function choose(action: () => void) {
   close()
   action()
 }
 function close() {
   open.value = false
-  trigger.value?.focus()
+  trigger.value?.focus({ preventScroll: true })
 }
 </script>
 <template>
@@ -30,18 +60,26 @@ function close() {
     >
       ⋯
     </button>
-    <div v-if="open" class="action-menu__panel">
-      <button
-        v-for="item in items"
-        :key="item.label"
-        type="button"
-        :class="{ error: item.danger }"
-        :disabled="item.disabled"
-        @click="choose(item.action)"
+    <Teleport to="body">
+      <div
+        v-if="open"
+        ref="panel"
+        class="action-menu__panel"
+        :style="panelStyle"
+        @keydown.esc.stop="close"
       >
-        {{ item.label }}
-      </button>
-    </div>
+        <button
+          v-for="item in items"
+          :key="item.label"
+          type="button"
+          :class="{ error: item.danger }"
+          :disabled="item.disabled"
+          @click="choose(item.action)"
+        >
+          {{ item.label }}
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>
 <style scoped>
@@ -49,10 +87,8 @@ function close() {
   position: relative;
 }
 .action-menu__panel {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 6px);
-  z-index: 5;
+  position: fixed;
+  z-index: 15;
   min-width: 140px;
   padding: 6px;
   background: var(--color-surface);
