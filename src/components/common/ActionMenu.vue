@@ -111,7 +111,9 @@ function close() {
 .action-menu__panel button.error {
   color: var(--color-danger);
 }
-.action-menu__panel button:hover {
-  background: var(--color-primary-light);
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .action-menu__panel button:hover {
+    background: var(--color-primary-light);
+  }
 }
 </style>

@@ -20,7 +20,9 @@
   line-height: 1;
   white-space: nowrap;
 }
-.header-button:hover {
-  background: var(--color-primary-light);
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .header-button:hover {
+    background: var(--color-primary-light);
+  }
 }
 </style>

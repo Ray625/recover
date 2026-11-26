@@ -89,8 +89,10 @@ const emit = defineEmits<{
   line-height: 1;
 }
 
-.app-toast button:hover {
-  background: var(--toast-button-hover-background);
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .app-toast button:hover {
+    background: var(--toast-button-hover-background);
+  }
 }
 
 .app-toast-enter-active,

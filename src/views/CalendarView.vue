@@ -616,8 +616,10 @@ function remove() {
   color: var(--color-primary);
   font: inherit;
 }
-.completion-toggle:hover {
-  background: var(--color-primary-light);
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .completion-toggle:hover {
+    background: var(--color-primary-light);
+  }
 }
 .completion-dot {
   width: 6px;

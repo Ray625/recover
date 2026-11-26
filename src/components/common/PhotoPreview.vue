@@ -605,9 +605,11 @@ function clamp(value: number, min: number, max: number): number {
       opacity 160ms ease;
   }
 
-  .photo-preview__edge-hit-area:hover {
-    border-color: color-mix(in srgb, #fff 50%, transparent);
-    color: color-mix(in srgb, #fff 80%, transparent);
+  @media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+    .photo-preview__edge-hit-area:hover {
+      border-color: color-mix(in srgb, #fff 50%, transparent);
+      color: color-mix(in srgb, #fff 80%, transparent);
+    }
   }
 
   .photo-preview__edge-hit-area:disabled {
